@@ -1,0 +1,153 @@
+---------------------------------------------------------------------------
+ServiceXException                         Traceback (most recent call last)
+Cell In[5], line 21
+     19 for ds_name in input_files.keys():
+     20     ds = ServiceXDataset(input_files[ds_name], backend_name="uproot", ignore_cache=IGNORE_CACHE)
+---> 21     files = ds.get_data_rootfiles_uri(query, as_signed_url=True, title=ds_name)
+     23 #    fileset[ds_name] = {"files": [f.url for f in files],
+     24 #                        "metadata": {"dataset_name": ds_name}
+     25 #                       }
+     26 
+     27 #print(f"execution took {time.time() - t0:.2f} seconds")
+
+File /opt/conda/lib/python3.8/site-packages/make_it_sync/func_wrapper.py:63, in make_sync.<locals>.wrapped_call(*args, **kwargs)
+     61 @wraps(fn)
+     62 def wrapped_call(*args, **kwargs):
+---> 63     return _sync_version_of_function(fn, *args, **kwargs)
+
+File /opt/conda/lib/python3.8/site-packages/make_it_sync/func_wrapper.py:26, in _sync_version_of_function(fn, *args, **kwargs)
+     23 exector = ThreadPoolExecutor(max_workers=1)
+     24 future = exector.submit(get_data_wrapper, *args, **kwargs)
+---> 26 return future.result()
+
+File /opt/conda/lib/python3.8/concurrent/futures/_base.py:444, in Future.result(self, timeout)
+    442     raise CancelledError()
+    443 elif self._state == FINISHED:
+--> 444     return self.__get_result()
+    445 else:
+    446     raise TimeoutError()
+
+File /opt/conda/lib/python3.8/concurrent/futures/_base.py:389, in Future.__get_result(self)
+    387 if self._exception:
+    388     try:
+--> 389         raise self._exception
+    390     finally:
+    391         # Break a reference cycle with the exception in self._exception
+    392         self = None
+
+File /opt/conda/lib/python3.8/concurrent/futures/thread.py:57, in _WorkItem.run(self)
+     54     return
+     56 try:
+---> 57     result = self.fn(*self.args, **self.kwargs)
+     58 except BaseException as exc:
+     59     self.future.set_exception(exc)
+
+File /opt/conda/lib/python3.8/site-packages/make_it_sync/func_wrapper.py:21, in _sync_version_of_function.<locals>.get_data_wrapper(*args, **kwargs)
+     19 asyncio.set_event_loop(loop)
+     20 assert not loop.is_running()
+---> 21 return loop.run_until_complete(fn(*args, **kwargs))
+
+File /opt/conda/lib/python3.8/asyncio/base_events.py:616, in BaseEventLoop.run_until_complete(self, future)
+    613 if not future.done():
+    614     raise RuntimeError('Event loop stopped before Future completed.')
+--> 616 return future.result()
+
+File /opt/conda/lib/python3.8/site-packages/servicex/servicex.py:520, in ServiceXDataset.get_data_rootfiles_uri_async(self, selection_query, title, as_signed_url)
+    504 async def get_data_rootfiles_uri_async(
+    505     self,
+    506     selection_query: str,
+    507     title: Optional[str] = None,
+    508     as_signed_url: Optional[bool] = False,
+    509 ) -> List[StreamInfoUrl]:
+    510     """Returns a list of StreamInfoUrl entries containing a `url` for each output file
+    511     from the transform, taken from get_data_rootfiles_uri_stream.
+    512     The data that comes back includes a `url` that can be accessed to download the
+   (...)
+    518         as_signed_url (bool): Return the uri as a presigned http url?
+    519     """
+--> 520     return [
+    521         f
+    522         async for f in self.get_data_rootfiles_uri_stream(
+    523             selection_query, title=title, as_signed_url=as_signed_url
+    524         )
+    525     ]
+
+File /opt/conda/lib/python3.8/site-packages/servicex/servicex.py:520, in <listcomp>(.0)
+    504 async def get_data_rootfiles_uri_async(
+    505     self,
+    506     selection_query: str,
+    507     title: Optional[str] = None,
+    508     as_signed_url: Optional[bool] = False,
+    509 ) -> List[StreamInfoUrl]:
+    510     """Returns a list of StreamInfoUrl entries containing a `url` for each output file
+    511     from the transform, taken from get_data_rootfiles_uri_stream.
+    512     The data that comes back includes a `url` that can be accessed to download the
+   (...)
+    518         as_signed_url (bool): Return the uri as a presigned http url?
+    519     """
+--> 520     return [
+    521         f
+    522         async for f in self.get_data_rootfiles_uri_stream(
+    523             selection_query, title=title, as_signed_url=as_signed_url
+    524         )
+    525     ]
+
+File /opt/conda/lib/python3.8/site-packages/servicex/servicex.py:499, in ServiceXDataset.get_data_rootfiles_uri_stream(self, selection_query, title, as_signed_url)
+    484 async def get_data_rootfiles_uri_stream(
+    485     self,
+    486     selection_query: str,
+    487     title: Optional[str] = None,
+    488     as_signed_url: Optional[bool] = False,
+    489 ) -> AsyncIterator[StreamInfoUrl]:
+    490     """Returns, as an async iterator, each completed batch of work from ServiceX.
+    491     The data that comes back includes a `url` that can be accessed to download the
+    492     data.
+   (...)
+    497         as_signed_url (bool): Return the uri as a presigned http url?
+    498     """
+--> 499     async for f_info in self._stream_url_buckets(
+    500         selection_query, "root-file", title, as_signed_url
+    501     ):  # type: ignore
+    502         yield f_info
+
+File /opt/conda/lib/python3.8/site-packages/servicex/utils.py:602, in retry_exception_itr.<locals>.retry(*args, **kwargs)
+    600 got_one_item = False
+    601 try:
+--> 602     async for item in target(*args, **kwargs):
+    603         got_one_item = True
+    604         yield item
+
+File /opt/conda/lib/python3.8/site-packages/servicex/utils.py:602, in retry_exception_itr.<locals>.retry(*args, **kwargs)
+    600 got_one_item = False
+    601 try:
+--> 602     async for item in target(*args, **kwargs):
+    603         got_one_item = True
+    604         yield item
+
+File /opt/conda/lib/python3.8/site-packages/servicex/servicex.py:630, in ServiceXDataset._stream_url_buckets(self, selection_query, data_format, title, as_signed_url)
+    626 query = self._build_json_query(selection_query, data_format, title)
+    628 async with aiohttp.ClientSession() as client:
+    629     # Get a request id - which might be cached, but if not, submit it.
+--> 630     request_id = await self._get_request_id(client, query)
+    632     # Make sure cache status exists (user could have deleted, see #176)
+    633     if not self._cache.query_status_exists(request_id):
+
+File /opt/conda/lib/python3.8/site-packages/servicex/servicex.py:911, in ServiceXDataset._get_request_id(self, client, query)
+    909 request_id = self._cache.lookup_query(query)
+    910 if request_id is None:
+--> 911     request_info = await self._servicex_adaptor.submit_query(client, query)
+    912     request_id = request_info["request_id"]
+    913     self._cache.set_query(query, request_id)
+
+File /opt/conda/lib/python3.8/site-packages/servicex/servicex_adaptor.py:72, in ServiceXAdaptor.submit_query(self, client, json_query)
+     68 if status != 200:
+     69     # This was an error at ServiceX, bubble it up so code above us can
+     70     # handle as needed.
+     71     t = await response.text()
+---> 72     raise ServiceXException(
+     73         "ServiceX rejected the transformation request: " f"({status}){t}"
+     74     )
+     76 r = await response.json()
+     77 return r
+
+ServiceXException: (ServiceXException(...), 'ServiceX rejected the transformation request: (500){"message": "Something went wrong"}\n')
